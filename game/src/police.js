@@ -56,10 +56,14 @@ function nearestRoadCoord(v) {
 // Steer a police car toward the player. Far away it follows the road grid toward the
 // player's road (so it goes around buildings instead of through them); up close it
 // steers straight at the player to ram. Returns { throttle, steer }.
-// The road axis is re-derived from the car's position every frame: at an intersection
-// the car turns onto the cross road toward the player. (A sticky axis was tried and
-// reverted — it stranded the car at the intersection, because both road distances
-// are ~0 there and the axis never switched.)
+// The road axis is stored on the car and only re-derived when the car is clearly on
+// one road (close to its centreline and well clear of the nearest intersection). Near
+// an intersection both road distances are ~0, so re-deriving every frame flips the
+// axis and the car oscillates instead of turning. (A sticky axis that never released
+// was tried and reverted — it stranded the car, because both road distances are ~0
+// at the intersection and the axis never switched. This one releases as soon as the
+// car is clearly on a road again, and the steering target still pulls a drifted car
+// back to the road, so a stale axis self-corrects.)
 function policeSteer(car, px, pz) {
   const dx = px - car.x;
   const dz = pz - car.z;
@@ -75,7 +79,16 @@ function policeSteer(car, px, pz) {
   // road, then turn onto it. The car's road is the grid line it is closest to.
   const roadX = nearestRoadCoord(car.x);
   const roadZ = nearestRoadCoord(car.z);
-  const onVertical = Math.abs(car.x - roadX) < Math.abs(car.z - roadZ);
+  const dxRoad = Math.abs(car.x - roadX);
+  const dzRoad = Math.abs(car.z - roadZ);
+  if (car.roadAxis === undefined || car.roadAxis === null) {
+    car.roadAxis = dxRoad < dzRoad ? 'x' : 'z';
+  } else if (dxRoad < 2.5 && dzRoad > 8) {
+    car.roadAxis = 'x';
+  } else if (dzRoad < 2.5 && dxRoad > 8) {
+    car.roadAxis = 'z';
+  }
+  const onVertical = car.roadAxis === 'x';
   const pRoadX = nearestRoadCoord(px);
   const pRoadZ = nearestRoadCoord(pz);
   const tx = onVertical ? roadX : pRoadX;

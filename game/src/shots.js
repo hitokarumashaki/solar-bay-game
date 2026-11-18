@@ -42,8 +42,10 @@ export function stageShot(name, game) {
     missions.step = 1;
     missions.beam.position.set(0, 20, 168);
     missions.diamond.position.set(0, 6, 168);
+    missions.ring.position.set(0, 0.08, 168);
     missions.beam.visible = true;
     missions.diamond.visible = true;
+    missions.ring.visible = true;
     game.money = 1250;
     game.health = 100;
     game.objective = 'First Wheels: Drive to the boardwalk marker';
@@ -69,8 +71,10 @@ export function stageShot(name, game) {
     missions.step = 0;
     missions.beam.position.set(0, 20, 168);
     missions.diamond.position.set(0, 6, 168);
+    missions.ring.position.set(0, 0.08, 168);
     missions.beam.visible = true;
     missions.diamond.visible = true;
+    missions.ring.visible = true;
     game.money = 350;
     game.health = 100;
     game.objective = 'First Wheels: Steal a car (press E next to one)';
@@ -95,18 +99,21 @@ export function stageShot(name, game) {
     missions.step = 1;
     missions.beam.position.set(160, 20, 0);
     missions.diamond.position.set(160, 6, 0);
+    missions.ring.position.set(160, 0.08, 0);
     missions.beam.visible = true;
     missions.diamond.visible = true;
+    missions.ring.visible = true;
     game.money = 2100;
     game.health = 82;
     game.objective = 'Hot Getaway: Lose the cops, then reach the safehouse';
   } else {
-    // The Bay Job escape at sunset: driving the getaway car east along the z=0 road
-    // straight toward the safehouse marker (160, 0), so the beam is dead ahead and
-    // unobstructed; wanted stars up from the bank job.
+    // The Midnight Run deliver at sunset: driving the getaway car east along the
+    // z=-120 road straight toward the Coral Hotel marker (160, -120), so the beam
+    // and its ground ring are dead ahead and unobstructed; the 120 s timer shows
+    // on the HUD and wanted stars are up from the ledger grab.
     city.setTimeOfDay(0.95);
-    placeCar(car, 100, 0, Math.PI / 2);
-    placePlayer(player, 100, 0, Math.PI / 2);
+    placeCar(car, 100, -120, Math.PI / 2);
+    placePlayer(player, 100, -120, Math.PI / 2);
     game.inCar = true;
     game.playerCar = car;
     player.group.visible = false;
@@ -114,21 +121,25 @@ export function stageShot(name, game) {
     game.cameraPitch = 0.3;
     game.camDist = 11;
     wanted.level = 2;
-    missions.index = 4;
+    missions.index = 5;
     missions.step = 2;
-    missions.beam.position.set(160, 20, 0);
-    missions.diamond.position.set(160, 6, 0);
+    missions.timer = 45;
+    missions.timerMax = 120;
+    missions.beam.position.set(160, 20, -120);
+    missions.diamond.position.set(160, 6, -120);
+    missions.ring.position.set(160, 0.08, -120);
     missions.beam.visible = true;
     missions.diamond.visible = true;
-    game.money = 3400;
+    missions.ring.visible = true;
+    game.money = 2500;
     game.health = 100;
-    game.objective = 'The Bay Job: Escape to the safehouse with the cash';
+    game.objective = 'Midnight Run: Deliver the ledger to the Coral Hotel (120 s)';
   }
   // Refresh the HUD once for the staged state.
   hud.update(
     {
       health: game.health, money: game.money, wanted: wanted.level,
-      objective: game.objective, timer: 0, timerMax: 0,
+      objective: game.objective, timer: missions.timer, timerMax: missions.timerMax,
       speedKmh: game.inCar ? 62 : 0, inCar: game.inCar, onFoot: !game.inCar,
     },
     0,

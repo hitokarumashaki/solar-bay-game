@@ -1,7 +1,7 @@
 // Missions + story. You are Rico Vega, a driver in Solar Bay; Marina Sol, a fixer,
-// calls the jobs. Four missions, each a chain of steps (go to a marker, pick up, deliver,
-// lose the cops, grab and escape). A glowing beam + floating diamond marks the target;
-// completing a mission pays out and advances the story.
+// calls the jobs. Six missions, each a chain of steps (go to a marker, pick up, deliver,
+// lose the cops, grab and escape). A glowing beam + floating diamond + ground ring marks
+// the target; completing a mission pays out and advances the story.
 import * as THREE from 'three';
 import { addWanted } from './police.js';
 
@@ -69,24 +69,46 @@ const MISSIONS = [
     reward: 800,
     done: 'Eight hundred thousand? No — eight hundred. But the legend is priceless. Solar Bay is yours now.',
   },
+  {
+    id: 'midnight',
+    title: 'Midnight Run',
+    giver: 'Marina Sol',
+    briefing: 'One more job, Rico — the biggest yet. The ledger is at the east docks. Grab it, shake the heat, then get it to the Coral Hotel before midnight runs out — two minutes.',
+    steps: [
+      { type: 'pickup', text: 'Grab the ledger at the east docks', x: 160, z: 160 },
+      { type: 'escape', text: 'Lose the cops, then reach the north plaza', x: 0, z: -160, heat: 2 },
+      { type: 'deliver', text: 'Deliver the ledger to the Coral Hotel (120 s)', x: 160, z: -120, time: 120 },
+    ],
+    reward: 900,
+    done: 'The ledger is ours. You are not just the Bay\'s best driver, Rico — you are its legend.',
+  },
 ];
 
 export function createMissions(scene, rng) {
-  // Marker: a glowing beam + a spinning diamond, placed at the current target.
-  const beamMat = new THREE.MeshBasicMaterial({ color: 0xffd23c, transparent: true, opacity: 0.35, depthWrite: false });
+  // Marker: a glowing beam + a spinning diamond + a ground ring, placed at the
+  // current target. The ring marks the target on the road itself, so it reads
+  // from far away even when the beam is behind a building.
+  const beamMat = new THREE.MeshBasicMaterial({ color: 0xffd23c, transparent: true, opacity: 0.45, depthWrite: false });
   const beam = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.6, 40, 12, 1, true), beamMat);
   beam.position.y = 20;
   scene.add(beam);
   const diamond = new THREE.Mesh(
-    new THREE.OctahedronGeometry(1.1),
+    new THREE.OctahedronGeometry(1.3),
     new THREE.MeshBasicMaterial({ color: 0xffd23c }),
   );
   diamond.position.y = 6;
   scene.add(diamond);
+  const ring = new THREE.Mesh(
+    new THREE.RingGeometry(3.2, 4.4, 32),
+    new THREE.MeshBasicMaterial({ color: 0xffd23c, transparent: true, opacity: 0.75, side: THREE.DoubleSide }),
+  );
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.y = 0.08;
+  scene.add(ring);
   return {
     scene, list: MISSIONS,
     index: 0, step: 0,
-    beam, diamond,
+    beam, diamond, ring,
     timer: 0, timerMax: 0,
     packageHeld: false,
     active: true,
@@ -120,15 +142,19 @@ function placeMarker(missions) {
   if (!missions.active) {
     missions.beam.visible = false;
     missions.diamond.visible = false;
+    missions.ring.visible = false;
     return;
   }
   const s = current(missions).steps[missions.step];
   missions.beam.visible = true;
   missions.diamond.visible = true;
+  missions.ring.visible = true;
   missions.beam.position.x = s.x;
   missions.beam.position.z = s.z;
   missions.diamond.position.x = s.x;
   missions.diamond.position.z = s.z;
+  missions.ring.position.x = s.x;
+  missions.ring.position.z = s.z;
 }
 
 // Advance the mission chain. Called every frame with the player's position and state.
@@ -215,6 +241,7 @@ function completeMission(missions, wanted, onMessage) {
     missions.active = false;
     missions.beam.visible = false;
     missions.diamond.visible = false;
+    missions.ring.visible = false;
     return 'all-done';
   }
   startMission(missions, wanted, onMessage);

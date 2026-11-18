@@ -172,10 +172,14 @@ export function buildCity(scene, rng) {
     scene.add(g);
   }
 
-  // Blocks: buildings, parks, parking lots.
+  // Blocks: buildings, parks, parking lots. Two blocks are reserved for named
+  // landmarks (built explicitly below), so the city has fixed points a player
+  // can navigate by — the Coral Hotel by the boardwalk, the Bay Bank up north.
+  const LANDMARK_BLOCKS = new Set(['140,140', '-20,-140']);
   const boxGeo = new THREE.BoxGeometry(1, 1, 1);
   for (const bx of BLOCK_CENTERS) {
     for (const bz of BLOCK_CENTERS) {
+      if (LANDMARK_BLOCKS.has(`${bx},${bz}`)) continue;
       const roll = rng();
       if (roll < 0.14) {
         // Park: grass + palms.
@@ -227,6 +231,72 @@ export function buildCity(scene, rng) {
       colliders.push({ minX: bx - w / 2, maxX: bx + w / 2, minZ: bz - d / 2, maxZ: bz + d / 2 });
       buildings.push({ x: bx, z: bz, w, d, h });
     }
+  }
+
+  // Named landmarks: fixed towers a player can navigate by, with a lit crown
+  // so they read at golden hour. The Coral Hotel (tall, coral) by the boardwalk;
+  // the Bay Bank (stone, gold top) at the north plaza; a striped lighthouse on
+  // the beach, due south of the main avenue.
+  function landmarkTower(bx, bz, w, d, h, wallColor, crownColor, crownH) {
+    const mat = winMats[rangeInt(rng, 0, winMats.length - 1)];
+    const mesh = new THREE.Mesh(boxGeo, [mat, mat, roofMat, roofMat, mat, mat]);
+    mesh.scale.set(w, h, d);
+    mesh.position.set(bx, h / 2, bz);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    scene.add(mesh);
+    const crown = new THREE.Mesh(
+      new THREE.BoxGeometry(w * 0.6, crownH, d * 0.6),
+      new THREE.MeshLambertMaterial({ color: crownColor, emissive: crownColor, emissiveIntensity: 0.35 }),
+    );
+    crown.position.set(bx, h + crownH / 2, bz);
+    crown.castShadow = true;
+    scene.add(crown);
+    colliders.push({ minX: bx - w / 2, maxX: bx + w / 2, minZ: bz - d / 2, maxZ: bz + d / 2 });
+    buildings.push({ x: bx, z: bz, w, d, h });
+  }
+  landmarkTower(140, 140, 20, 20, 55, 0xe07a5f, 0xffd23c, 3);
+  landmarkTower(-20, -140, 22, 18, 38, 0xf7f0e0, 0xd9a441, 2.5);
+  // Lighthouse: white tower with red bands on the sand, light on top.
+  const lightMat = new THREE.MeshLambertMaterial({ color: 0xfff6e0, emissive: 0xffe9a0, emissiveIntensity: 0.8 });
+  const bandMat = new THREE.MeshLambertMaterial({ color: 0xd23b2e });
+  const lightTower = new THREE.Group();
+  const lhBase = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.8, 16, 10), new THREE.MeshLambertMaterial({ color: 0xffffff }));
+  lhBase.position.y = 8;
+  lhBase.castShadow = true;
+  lightTower.add(lhBase);
+  for (const [y, h] of [[4, 2.2], [10, 2.2]]) {
+    const band = new THREE.Mesh(new THREE.CylinderGeometry(2.35, 2.5, h, 10), bandMat);
+    band.position.y = y;
+    lightTower.add(band);
+  }
+  const lhTop = new THREE.Mesh(new THREE.SphereGeometry(1.6, 10, 8), lightMat);
+  lhTop.position.y = 17;
+  lightTower.add(lhTop);
+  lightTower.position.set(0, 0, 200);
+  scene.add(lightTower);
+  colliders.push({ minX: -3, maxX: 3, minZ: 197, maxZ: 203 });
+
+  // Sun disc + clouds: the disc sits in the sun's direction and moves with
+  // setTimeOfDay; the clouds are static white blobs high over the city.
+  const sunDisc = new THREE.Mesh(
+    new THREE.CircleGeometry(14, 24),
+    new THREE.MeshBasicMaterial({ color: 0xfff2b0, fog: false }),
+  );
+  scene.add(sunDisc);
+  const cloudMat = new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 });
+  const cloudGeo = new THREE.SphereGeometry(1, 10, 8);
+  for (let i = 0; i < 7; i += 1) {
+    const cloud = new THREE.Group();
+    const puffs = rangeInt(rng, 3, 5);
+    for (let p = 0; p < puffs; p += 1) {
+      const puff = new THREE.Mesh(cloudGeo, cloudMat);
+      puff.scale.set(range(rng, 6, 12), range(rng, 2, 3.5), range(rng, 4, 7));
+      puff.position.set(range(rng, -9, 9), range(rng, -1, 1), range(rng, -4, 4));
+      cloud.add(puff);
+    }
+    cloud.position.set(range(rng, -190, 190), range(rng, 85, 130), range(rng, -190, 190));
+    scene.add(cloud);
   }
 
   // Palms along the boardwalk + streetlights at every other intersection.
@@ -308,6 +378,10 @@ export function buildCity(scene, rng) {
     hemi.intensity = lerp(a.hemiI, b.hemiI);
     scene.background = new THREE.Color(a.sky).lerp(new THREE.Color(b.sky), f);
     scene.fog = new THREE.Fog(new THREE.Color(a.fog).lerp(new THREE.Color(b.fog), f), 120, 520);
+    // Sun disc: far out along the sun's direction, facing the city centre.
+    sunDisc.position.set(sun.position.x * 2.4, Math.max(40, sun.position.y * 2.4), sun.position.z * 2.4);
+    sunDisc.lookAt(0, 0, 0);
+    sunDisc.material.color.setHex(a.color).lerp(new THREE.Color(b.color), f);
   }
   setTimeOfDay(0.75);
 
