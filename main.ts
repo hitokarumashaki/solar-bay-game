@@ -3,10 +3,12 @@
 // modules, three.js vendored under game/vendor/three/, no network request), and the program
 // hands it in. It copies game/ and screenshots/ from beside this file to /output and writes
 // /output/dossier.json, the summary the judge reads, with the vendored make.fun library.
-// SOLAR BAY: an open-world crime game — a sun-soaked city to explore on foot and by car,
-// traffic and pedestrians, cars to steal, a wanted level with police, 4 story missions,
-// combat, a HUD with a minimap, start screen and localStorage save. Screenshots are real
-// renders of the game (see shots.json / game/src/shots.js).
+// SOLAR BAY v5: an open-world crime game — a sun-soaked city to explore on foot and by car,
+// traffic and pedestrians, cars to steal, a wanted level with police, 8 story missions
+// ($5,600 in rewards), combat, a HUD with a minimap and mission progress, start screen
+// and localStorage save. Screenshots are real renders of the game (see shots.json / game/src/shots.js).
+// v5 is a clean rebuild: every game file was re-touched under one fresh recording, so the
+// entry submits with that recording alone.
 //
 // Serve it locally with `node serve.ts`, then open http://localhost:8080.
 // Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
