@@ -17,6 +17,7 @@ export function createHud(doc) {
   const message = el('message');
   const dialogue = el('dialogue');
   const crosshair = el('crosshair');
+  const hitmark = el('hitmark');
   const minimap = el('minimap');
   const mapCtx = minimap.getContext('2d');
   const startScreen = el('start-screen');
@@ -26,11 +27,18 @@ export function createHud(doc) {
   const endText = el('end-text');
   let messageTimer = 0;
   let dialogueTimer = 0;
+  let hitmarkTimer = 0;
 
   function showMessage(text, seconds) {
     message.textContent = text;
     message.style.opacity = '1';
     messageTimer = seconds || 2.6;
+  }
+
+  // A brief X over the crosshair when a bullet lands, so hits are unmistakable.
+  function showHitmark() {
+    hitmark.style.opacity = '1';
+    hitmarkTimer = 0.25;
   }
 
   function showDialogue(text, seconds) {
@@ -78,6 +86,10 @@ export function createHud(doc) {
     if (dialogueTimer > 0) {
       dialogueTimer -= dt;
       if (dialogueTimer <= 0) dialogue.style.opacity = '0';
+    }
+    if (hitmarkTimer > 0) {
+      hitmarkTimer -= dt;
+      if (hitmarkTimer <= 0) hitmark.style.opacity = '0';
     }
   }
 
@@ -167,5 +179,5 @@ export function createHud(doc) {
     ctx.stroke();
   }
 
-  return { update, drawMinimap, showMessage, showDialogue, setScreen, showEnd, hideOverlay };
+  return { update, drawMinimap, showMessage, showDialogue, showHitmark, setScreen, showEnd, hideOverlay };
 }

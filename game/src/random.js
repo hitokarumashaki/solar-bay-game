@@ -21,3 +21,14 @@ export function range(random, min, max) {
 export function rangeInt(random, min, max) {
   return Math.floor(range(random, min, max + 1));
 }
+
+// Fisher-Yates shuffle, in place, using the seeded random.
+export function shuffle(random, array) {
+  for (let i = array.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(random() * (i + 1));
+    const tmp = array[i];
+    array[i] = array[j];
+    array[j] = tmp;
+  }
+  return array;
+}

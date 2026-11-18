@@ -25,7 +25,7 @@ const MISSIONS = [
     briefing: 'A package is waiting at the docks, south-west corner. Pick it up and get it to the Coral Hotel before the sun is gone — 90 seconds.',
     steps: [
       { type: 'pickup', text: 'Pick up the package at the docks', x: -160, z: 160 },
-      { type: 'deliver', text: 'Deliver to the Coral Hotel (90 s)', x: 140, z: -140, time: 90 },
+      { type: 'deliver', text: 'Deliver to the Coral Hotel (90 s)', x: 160, z: -120, time: 90 },
     ],
     reward: 350,
     done: 'On time. The client is happy, and happy clients pay twice.',
@@ -36,11 +36,25 @@ const MISSIONS = [
     giver: 'Marina Sol',
     briefing: 'The briefcase is at the plaza. Grab it — the cops will not like it. Lose them, then get to the safehouse on the east side.',
     steps: [
-      { type: 'pickup', text: 'Grab the briefcase at the plaza', x: 20, z: 20 },
+      { type: 'pickup', text: 'Grab the briefcase at the plaza', x: 0, z: 0 },
       { type: 'escape', text: 'Lose the cops, then reach the safehouse', x: 160, z: 0, heat: 2 },
     ],
     reward: 500,
     done: 'You vanished like smoke. The Bay is yours, Rico.',
+  },
+  {
+    id: 'drops',
+    title: 'Three Drops',
+    giver: 'Marina Sol',
+    briefing: 'Three packages, three corners of the Bay. Pick them all up, then bring them to the safehouse. No rush — but do not get caught holding them.',
+    steps: [
+      { type: 'pickup', text: 'Pick up the first drop (north-west)', x: -160, z: -160 },
+      { type: 'pickup', text: 'Pick up the second drop (north-east)', x: 160, z: -160 },
+      { type: 'pickup', text: 'Pick up the third drop (south-east)', x: 160, z: 160 },
+      { type: 'deliver', text: 'Deliver all three to the safehouse', x: 160, z: 0 },
+    ],
+    reward: 650,
+    done: 'Three drops, one driver, zero questions. You are the Bay\'s best courier now.',
   },
   {
     id: 'bayjob',
@@ -49,7 +63,7 @@ const MISSIONS = [
     briefing: 'One last job. The Bay Bank vault, north plaza. Two guards inside — they shoot. Grab the cash on foot and run for the safehouse.',
     steps: [
       { type: 'goto', text: 'Drive to the Bay Bank, north plaza', x: 0, z: -160 },
-      { type: 'grab', text: 'Grab the cash on foot — watch the guards', x: -20, z: -140 },
+      { type: 'grab', text: 'Grab the cash on foot — watch the guards', x: 0, z: -140 },
       { type: 'escape', text: 'Escape to the safehouse with the cash', x: 160, z: 0, heat: 3 },
     ],
     reward: 800,

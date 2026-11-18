@@ -5,7 +5,7 @@
 import * as THREE from 'three';
 import { ROAD_AT } from './city.js';
 import { CAR_COLORS, createCar, placeCar, syncCar, CAR_RADIUS } from './vehicles.js';
-import { pick, range, rangeInt } from './random.js';
+import { pick, range, rangeInt, shuffle } from './random.js';
 
 const TRAFFIC_COUNT = 10;
 const PED_COUNT = 16;
@@ -46,7 +46,9 @@ export function createTraffic(scene, city, rng) {
     cars.push(car);
   }
   const parked = [];
-  for (const lot of city.parkingLots.slice(0, PARKED_COUNT)) {
+  // Shuffle the lots so a different set of blocks gets parked cars each seed.
+  const lots = shuffle(rng, city.parkingLots.slice());
+  for (const lot of lots.slice(0, PARKED_COUNT)) {
     const car = createCar(scene, pick(rng, CAR_COLORS), false);
     placeCar(car, lot.x + range(rng, -8, 8), lot.z + range(rng, -8, 8), range(rng, 0, Math.PI * 2));
     car.parked = true;
@@ -112,7 +114,7 @@ function nearestRoad(v) {
   return best;
 }
 
-export function updateTraffic(traffic, dt, collideCircle, playerCar, playerPos) {
+export function updateTraffic(traffic, dt, collideCircle, playerCar, playerPos, policeCars) {
   for (const car of traffic.cars) {
     if (car.stopped > 0) {
       car.stopped -= dt;
@@ -129,6 +131,16 @@ export function updateTraffic(traffic, dt, collideCircle, playerCar, playerPos) 
       const ahead = dx * Math.sin(car.heading) + dz * Math.cos(car.heading);
       const side = Math.abs(dx * Math.cos(car.heading) - dz * Math.sin(car.heading));
       if (ahead > 0 && ahead < 9 && side < 2.5) brake = true;
+    }
+    // Yield to a police car ahead: pull over so the chase can get through.
+    if (!brake && policeCars) {
+      for (const pc of policeCars) {
+        const dx = pc.x - car.x;
+        const dz = pc.z - car.z;
+        const ahead = dx * Math.sin(car.heading) + dz * Math.cos(car.heading);
+        const side = Math.abs(dx * Math.cos(car.heading) - dz * Math.sin(car.heading));
+        if (ahead > 0 && ahead < 12 && side < 3) { brake = true; break; }
+      }
     }
     const ctrl = trafficSteer(car, dt);
     if (brake) ctrl.throttle = -0.6;
@@ -169,11 +181,16 @@ export function updateTraffic(traffic, dt, collideCircle, playerCar, playerPos) 
       }
       continue;
     }
-    // Flee from a nearby car (player or traffic).
+    // Flee from a nearby car (player, traffic or police) or from the player on foot.
     let threat = null;
     if (playerPos) {
       const d = Math.hypot(playerPos.x - ped.x, playerPos.z - ped.z);
       if (d < 5) threat = playerPos;
+    }
+    if (!threat && policeCars) {
+      for (const pc of policeCars) {
+        if (Math.hypot(pc.x - ped.x, pc.z - ped.z) < 8) { threat = pc; break; }
+      }
     }
     if (threat) ped.flee = 1.5;
     let speed = ped.speed;

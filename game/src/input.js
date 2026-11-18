@@ -7,6 +7,7 @@ export const ACTION_ENTER_CAR = 4;
 export const ACTION_SHOOT = 8;
 export const ACTION_RELOAD = 16;
 export const ACTION_HANDBRAKE = 32;
+export const ACTION_ZOOM = 64;
 
 export function createInput(canvas) {
   const keys = new Set();
@@ -72,6 +73,7 @@ export function createInput(canvas) {
     if (pressed.has('KeyE')) actions |= ACTION_ENTER_CAR;
     if (pressed.has('KeyF') || pressed.has('Mouse')) actions |= ACTION_SHOOT;
     if (pressed.has('KeyR')) actions |= ACTION_RELOAD;
+    if (pressed.has('KeyC')) actions |= ACTION_ZOOM;
     if (down('Space')) actions |= ACTION_HANDBRAKE;
     pressed.clear();
     return actions;

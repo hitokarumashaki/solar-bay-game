@@ -1,5 +1,7 @@
 // localStorage save/load for Solar Bay: money, mission progress, health, position.
-export const SAVE_KEY = 'solarbay-save-v1';
+// Save key v2: v2 added a fifth mission, so v1 saves (which index the old 4-mission
+// list) are not carried over — a v1 save simply starts a fresh game.
+export const SAVE_KEY = 'solarbay-save-v2';
 
 export function readSave() {
   try {

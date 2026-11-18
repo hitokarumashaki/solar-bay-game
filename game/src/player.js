@@ -67,13 +67,21 @@ export function stepPlayer(player, move, jump, cameraYaw, dt, collideCircle) {
     const len = Math.hypot(dx, dz);
     dx = (dx / len) * speed;
     dz = (dz / len) * speed;
-    player.heading = Math.atan2(dx, dz);
   }
   const nx = player.x + dx * dt;
   const nz = player.z + dz * dt;
   const hit = collideCircle(nx, nz, 0.55);
   player.x = hit.x;
   player.z = hit.z;
+  if (move.forward !== 0 || move.strafe !== 0) {
+    // Turn toward the movement direction smoothly instead of snapping, so the
+    // character reads as running rather than teleporting its facing.
+    const target = Math.atan2(dx, dz);
+    let diff = target - player.heading;
+    while (diff > Math.PI) diff -= Math.PI * 2;
+    while (diff < -Math.PI) diff += Math.PI * 2;
+    player.heading += diff * Math.min(1, dt * 14);
+  }
   if (jump && player.grounded) {
     player.vy = 7.5;
     player.grounded = false;

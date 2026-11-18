@@ -1,13 +1,16 @@
 // Wanted system + police. Crimes raise the wanted level (0-5 stars); it decays when the
-// player lays low. Police cars spawn on nearby roads and ram-chase the player; when the
-// player is on foot, officers get out and chase — if one holds contact for ~2 s the player
-// is BUSTED. Wanted stars and the nearest police distance drive the HUD and the siren.
+// player lays low and the police lose the trail. Police cars follow the road grid toward
+// the player's road (they no longer drive straight through buildings), then ram-chase
+// up close; when the player is on foot, officers get out and chase — if one holds
+// contact for ~2 s the player is BUSTED. Wanted stars and the nearest police distance
+// drive the HUD and the siren.
 import * as THREE from 'three';
 import { createCar, placeCar, driveCar, separateCars } from './vehicles.js';
+import { ROAD_AT } from './city.js';
 import { pick, range } from './random.js';
 
 export function createWanted() {
-  return { level: 0, quiet: 0, bustedTimer: 0 };
+  return { level: 0, quiet: 0, bustedTimer: 0, lostTimer: 0 };
 }
 
 export function addWanted(wanted, amount) {
@@ -44,26 +47,95 @@ function officerModel(scene) {
   return { group: g, legL, legR, x: 0, z: 0, heading: 0, phase: 0 };
 }
 
+function nearestRoadCoord(v) {
+  let best = ROAD_AT[0];
+  for (const r of ROAD_AT) if (Math.abs(v - r) < Math.abs(v - best)) best = r;
+  return best;
+}
+
+// Steer a police car toward the player. Far away it follows the road grid toward the
+// player's road (so it goes around buildings instead of through them); up close it
+// steers straight at the player to ram. Returns { throttle, steer }.
+// The road axis is re-derived from the car's position every frame: at an intersection
+// the car turns onto the cross road toward the player. (A sticky axis was tried and
+// reverted — it stranded the car at the intersection, because both road distances
+// are ~0 there and the axis never switched.)
+function policeSteer(car, px, pz) {
+  const dx = px - car.x;
+  const dz = pz - car.z;
+  const dist = Math.hypot(dx, dz);
+  if (dist < 22) {
+    const want = Math.atan2(dx, dz);
+    let diff = want - car.heading;
+    while (diff > Math.PI) diff -= Math.PI * 2;
+    while (diff < -Math.PI) diff += Math.PI * 2;
+    return { throttle: 1, steer: Math.max(-1, Math.min(1, diff * 2.5)), handbrake: false };
+  }
+  // Far: drive along the car's current road toward the intersection with the player's
+  // road, then turn onto it. The car's road is the grid line it is closest to.
+  const roadX = nearestRoadCoord(car.x);
+  const roadZ = nearestRoadCoord(car.z);
+  const onVertical = Math.abs(car.x - roadX) < Math.abs(car.z - roadZ);
+  const pRoadX = nearestRoadCoord(px);
+  const pRoadZ = nearestRoadCoord(pz);
+  const tx = onVertical ? roadX : pRoadX;
+  const tz = onVertical ? pRoadZ : roadZ;
+  const want = Math.atan2(tx - car.x, tz - car.z);
+  let diff = want - car.heading;
+  while (diff > Math.PI) diff -= Math.PI * 2;
+  while (diff < -Math.PI) diff += Math.PI * 2;
+  return { throttle: 1, steer: Math.max(-1, Math.min(1, diff * 2.2)), handbrake: false };
+}
+
 export function updatePolice(police, wanted, dt, collideCircle, player, playerCar, scene) {
   const px = playerCar ? playerCar.x : player.x;
   const pz = playerCar ? playerCar.z : player.z;
-  // Decay: lay low with no police near and no new crime for a while.
+  // Nearest police distance, for the HUD, the siren and the escape check.
   let nearest = Infinity;
   for (const car of police.cars) nearest = Math.min(nearest, Math.hypot(car.x - px, car.z - pz));
   for (const off of police.officers) nearest = Math.min(nearest, Math.hypot(off.x - px, off.z - pz));
+  // Escape: if every cop is far away for a while, they lose the trail — they peel off
+  // one by one, and once none is near, the wanted level starts to fall.
   if (wanted.level > 0) {
+    if (nearest > 55) wanted.lostTimer += dt;
+    else wanted.lostTimer = 0;
+    if (wanted.lostTimer > 6 && police.cars.length > 0) {
+      // Peel off the farthest car.
+      let far = 0;
+      let farD = -1;
+      for (let i = 0; i < police.cars.length; i += 1) {
+        const d = Math.hypot(police.cars[i].x - px, police.cars[i].z - pz);
+        if (d > farD) { farD = d; far = i; }
+      }
+      const gone = police.cars.splice(far, 1)[0];
+      scene.remove(gone.group);
+      wanted.lostTimer = 0;
+    }
+    if (wanted.lostTimer > 6 && police.officers.length > 0) {
+      const gone = police.officers.pop();
+      scene.remove(gone.group);
+      wanted.lostTimer = 0;
+    }
+    // Decay: lay low with no police near and no new crime for a while.
     wanted.quiet += dt;
-    if (wanted.quiet > 22 && nearest > 45) {
+    if (wanted.quiet > 12 && nearest > 45) {
       wanted.level -= 1;
       wanted.quiet = 0;
+      wanted.lostTimer = 0;
     }
+  } else {
+    wanted.quiet = 0;
+    wanted.lostTimer = 0;
   }
-  // Spawn police cars up to the wanted level.
+  // Spawn police cars up to the wanted level. They are a touch slower than the
+  // player's car, so a clean straight-line getaway can build distance — but they
+  // keep coming, and they cut corners on the grid.
   const wantCars = wanted.level;
   police.spawnTimer -= dt;
   if (police.cars.length < wantCars && police.spawnTimer <= 0) {
     police.spawnTimer = 1.2;
     const car = createCar(scene, 0x1a1c20, true);
+    car.topSpeed = 29;
     const angle = range(police.rng, 0, Math.PI * 2);
     const sx = px + Math.sin(angle) * 70;
     const sz = pz + Math.cos(angle) * 70;
@@ -71,19 +143,13 @@ export function updatePolice(police, wanted, dt, collideCircle, player, playerCa
     placeCar(car, hit.x, hit.z, Math.atan2(px - hit.x, pz - hit.z));
     police.cars.push(car);
   }
-  // Chase: steer straight at the player, full throttle; ram by separation.
+  // Chase: road-following far away, direct ram up close.
   for (const car of police.cars) {
-    const dx = px - car.x;
-    const dz = pz - car.z;
-    const want = Math.atan2(dx, dz);
-    let diff = want - car.heading;
-    while (diff > Math.PI) diff -= Math.PI * 2;
-    while (diff < -Math.PI) diff += Math.PI * 2;
-    const steer = Math.max(-1, Math.min(1, diff * 2.5));
-    driveCar(car, { throttle: 1, steer, handbrake: false }, dt, collideCircle);
+    const ctrl = policeSteer(car, px, pz);
+    driveCar(car, ctrl, dt, collideCircle);
     if (playerCar) separateCars(car, playerCar);
     // On foot: an officer bails out when the police car gets close.
-    if (!playerCar && Math.hypot(dx, dz) < 7 && police.officers.length < wanted.level) {
+    if (!playerCar && Math.hypot(px - car.x, pz - car.z) < 7 && police.officers.length < wanted.level) {
       const off = officerModel(scene);
       off.x = car.x + 2;
       off.z = car.z + 2;

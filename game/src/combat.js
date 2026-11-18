@@ -5,7 +5,8 @@ import * as THREE from 'three';
 
 export function createCombat(scene) {
   const tracerMat = new THREE.MeshBasicMaterial({ color: 0xffe9a0, transparent: true, opacity: 0.9 });
-  const tracerGeo = new THREE.BoxGeometry(0.06, 0.06, 1);
+  // A thicker tracer, so a shot reads clearly even in bright daylight.
+  const tracerGeo = new THREE.BoxGeometry(0.12, 0.12, 1);
   const tracer = new THREE.Mesh(tracerGeo, tracerMat);
   tracer.visible = false;
   scene.add(tracer);

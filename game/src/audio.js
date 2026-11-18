@@ -143,9 +143,15 @@ export function createAudio() {
     blip(1200, 0.05, 'square', 0.08);
   }
 
+  // A short metallic tick when a bullet lands, so a hit is audible as well as visible.
+  function hit() {
+    blip(1900, 0.06, 'square', 0.14);
+    setTimeout(() => blip(1500, 0.05, 'square', 0.1), 45);
+  }
+
   function thud() {
     blip(70, 0.18, 'sine', 0.35);
   }
 
-  return { ensure, update, gunshot, chime, click, thud };
+  return { ensure, update, gunshot, chime, click, thud, hit };
 }

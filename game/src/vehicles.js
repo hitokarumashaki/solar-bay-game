@@ -8,12 +8,14 @@ export const CAR_RADIUS = 1.7;
 
 export function createCarModel(color, police) {
   const g = new THREE.Group();
-  const bodyMat = new THREE.MeshLambertMaterial({ color: police ? 0x1a1c20 : color });
+  // Police cars are white with a dark cabin, so they read clearly against the dark
+  // asphalt — the red/blue light bar marks them as Solar Bay PD.
+  const bodyMat = new THREE.MeshLambertMaterial({ color: police ? 0xf2f2f2 : color });
   const body = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.62, 4.2), bodyMat);
   body.position.y = 0.55;
   body.castShadow = true;
   g.add(body);
-  const cabinMat = new THREE.MeshLambertMaterial({ color: police ? 0xf2f2f2 : 0x222831 });
+  const cabinMat = new THREE.MeshLambertMaterial({ color: police ? 0x1a1c20 : 0x222831 });
   const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.55, 2.0), cabinMat);
   cabin.position.set(0, 1.1, -0.25);
   cabin.castShadow = true;
@@ -89,6 +91,7 @@ export function createCar(scene, color, police) {
     health: 100,
     dead: false,
     sirenPhase: 0,
+    topSpeed: 30,
   };
   return car;
 }
@@ -144,9 +147,10 @@ export function driveCar(car, ctrl, dt, collideCircle) {
   car.steer += (steerTarget - car.steer) * Math.min(1, dt * 9);
   const turn = car.steer * (forwardSpeed / 2.9);
   car.heading += turn * dt;
-  // Cap speed.
+  // Cap speed (per car: police are a touch slower than the player's car, so a clean
+  // straight-line getaway can build distance).
   const sp = Math.hypot(car.vx, car.vz);
-  const maxSp = 30;
+  const maxSp = car.topSpeed || 30;
   if (sp > maxSp) {
     car.vx *= maxSp / sp;
     car.vz *= maxSp / sp;

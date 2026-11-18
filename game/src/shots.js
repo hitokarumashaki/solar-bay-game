@@ -32,6 +32,12 @@ export function stageShot(name, game) {
     player.group.visible = false;
     game.cameraYaw = Math.PI;
     game.cameraPitch = 0.32;
+    // A few traffic cars on the avenue ahead (south, toward the boardwalk), so the
+    // street feels alive.
+    const ahead = [[-2.5, 90, 0], [2.5, 120, 0], [-2.5, 150, 0]];
+    for (let i = 0; i < ahead.length && i < traffic.cars.length; i += 1) {
+      placeCar(traffic.cars[i], ahead[i][0], ahead[i][1], ahead[i][2]);
+    }
     missions.index = 0;
     missions.step = 1;
     missions.beam.position.set(0, 20, 168);
@@ -48,6 +54,13 @@ export function stageShot(name, game) {
     player.group.visible = true;
     const parked = traffic.parked[0];
     if (parked) placeCar(parked, -4, 160, Math.PI / 2);
+    // A pedestrian crossing right by the player, so the street feels lived-in.
+    const ped = traffic.peds[0];
+    if (ped) {
+      ped.x = -2;
+      ped.z = 152;
+      ped.group.position.set(ped.x, 0, ped.z);
+    }
     game.inCar = false;
     game.playerCar = null;
     game.cameraYaw = -Math.PI / 2;
@@ -88,18 +101,23 @@ export function stageShot(name, game) {
     game.health = 82;
     game.objective = 'Hot Getaway: Lose the cops, then reach the safehouse';
   } else {
-    // Mission at sunset on the beach: the safehouse marker, ocean and skyline behind.
+    // The Bay Job escape at sunset: driving the getaway car east along the z=0 road
+    // straight toward the safehouse marker (160, 0), so the beam is dead ahead and
+    // unobstructed; wanted stars up from the bank job.
     city.setTimeOfDay(0.95);
-    placePlayer(player, 80, 168, Math.PI);
-    player.group.visible = true;
-    game.inCar = false;
-    game.playerCar = null;
-    game.cameraYaw = 0;
-    game.cameraPitch = 0.15;
-    missions.index = 3;
+    placeCar(car, 100, 0, Math.PI / 2);
+    placePlayer(player, 100, 0, Math.PI / 2);
+    game.inCar = true;
+    game.playerCar = car;
+    player.group.visible = false;
+    game.cameraYaw = (Math.PI * 3) / 2;
+    game.cameraPitch = 0.3;
+    game.camDist = 11;
+    wanted.level = 2;
+    missions.index = 4;
     missions.step = 2;
-    missions.beam.position.set(80, 20, 100);
-    missions.diamond.position.set(80, 6, 100);
+    missions.beam.position.set(160, 20, 0);
+    missions.diamond.position.set(160, 6, 0);
     missions.beam.visible = true;
     missions.diamond.visible = true;
     game.money = 3400;

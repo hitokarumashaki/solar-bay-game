@@ -65,7 +65,7 @@ export function buildCity(scene, rng) {
   scene.add(ground);
 
   // Roads: dark asphalt strips, with a dashed centre line.
-  const roadMat = new THREE.MeshLambertMaterial({ color: 0x3a3f46 });
+  const roadMat = new THREE.MeshLambertMaterial({ color: 0x4a4f58 });
   const dashMat = new THREE.MeshLambertMaterial({ color: 0xd8d2c0 });
   const dashGeo = new THREE.BoxGeometry(0.6, 0.02, 4);
   for (const z of ROAD_AT) {
@@ -121,7 +121,8 @@ export function buildCity(scene, rng) {
   scene.add(boardwalk);
 
   // Window materials: 3 shared textures x repeats, picked by building height.
-  const winTex = [windowTexture(rng, 0.45), windowTexture(rng, 0.3), windowTexture(rng, 0.55)];
+  // More windows lit than v1, so the city reads warmer at golden hour.
+  const winTex = [windowTexture(rng, 0.55), windowTexture(rng, 0.4), windowTexture(rng, 0.65)];
   const repeats = [[1, 1], [2, 2], [2, 4], [3, 6]];
   const winMats = [];
   for (const tex of winTex) {
