@@ -6,10 +6,11 @@ import * as THREE from 'three';
 export const CAR_COLORS = [0xd23b2e, 0x2e6fd2, 0xe8b73c, 0x3aa655, 0xe8e4da, 0x22242a, 0x7a4fd0, 0xd27a2e];
 export const CAR_RADIUS = 1.7;
 
-export function createCarModel(color, police) {
+export function createCarModel(color, police, taxi) {
   const g = new THREE.Group();
   // Police cars are white with a dark cabin, so they read clearly against the dark
-  // asphalt — the red/blue light bar marks them as Solar Bay PD.
+  // asphalt — the red/blue light bar marks them as Solar Bay PD. Taxis are yellow
+  // with a lit roof sign; the flag is purely visual, the car drives like any other.
   const bodyMat = new THREE.MeshLambertMaterial({ color: police ? 0xf2f2f2 : color });
   const body = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.62, 4.2), bodyMat);
   body.position.y = 0.55;
@@ -55,6 +56,14 @@ export function createCarModel(color, police) {
     g.add(lamp);
   }
   let lightBar = null;
+  if (taxi) {
+    const sign = new THREE.Mesh(
+      new THREE.BoxGeometry(0.7, 0.22, 0.3),
+      new THREE.MeshLambertMaterial({ color: 0xfffbe0, emissive: 0xffe9a0, emissiveIntensity: 0.5 }),
+    );
+    sign.position.set(0, 1.58, -0.25);
+    g.add(sign);
+  }
   if (police) {
     lightBar = new THREE.Group();
     const red = new THREE.Mesh(
@@ -79,11 +88,11 @@ export function createCarModel(color, police) {
 
 // A drivable car: position, heading, velocity vector, steering. `driver` is 'player',
 // 'traffic' or 'police'; traffic/police cars are driven by their AI instead of input.
-export function createCar(scene, color, police) {
-  const { group, wheels, lightBar } = createCarModel(color, police);
+export function createCar(scene, color, police, taxi) {
+  const { group, wheels, lightBar } = createCarModel(color, police, taxi);
   scene.add(group);
   const car = {
-    group, wheels, lightBar, police: !!police,
+    group, wheels, lightBar, police: !!police, taxi: !!taxi,
     x: 0, z: 0, heading: 0,
     vx: 0, vz: 0,
     steer: 0,

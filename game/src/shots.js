@@ -107,10 +107,10 @@ export function stageShot(name, game) {
     game.health = 82;
     game.objective = 'Hot Getaway: Lose the cops, then reach the safehouse';
   } else {
-    // The Midnight Run deliver at sunset: driving the getaway car east along the
+    // The Lighthouse Job deliver at sunset: driving the getaway car east along the
     // z=-120 road straight toward the Coral Hotel marker (160, -120), so the beam
-    // and its ground ring are dead ahead and unobstructed; the 120 s timer shows
-    // on the HUD and wanted stars are up from the ledger grab.
+    // and its ground ring are dead ahead and unobstructed; the 150 s timer shows
+    // on the HUD and wanted stars are up from the lighthouse grab (heat 3).
     city.setTimeOfDay(0.95);
     placeCar(car, 100, -120, Math.PI / 2);
     placePlayer(player, 100, -120, Math.PI / 2);
@@ -120,20 +120,20 @@ export function stageShot(name, game) {
     game.cameraYaw = (Math.PI * 3) / 2;
     game.cameraPitch = 0.3;
     game.camDist = 11;
-    wanted.level = 2;
-    missions.index = 5;
-    missions.step = 2;
-    missions.timer = 45;
-    missions.timerMax = 120;
+    wanted.level = 3;
+    missions.index = 6;
+    missions.step = 3;
+    missions.timer = 75;
+    missions.timerMax = 150;
     missions.beam.position.set(160, 20, -120);
     missions.diamond.position.set(160, 6, -120);
     missions.ring.position.set(160, 0.08, -120);
     missions.beam.visible = true;
     missions.diamond.visible = true;
     missions.ring.visible = true;
-    game.money = 2500;
+    game.money = 3400;
     game.health = 100;
-    game.objective = 'Midnight Run: Deliver the ledger to the Coral Hotel (120 s)';
+    game.objective = 'The Lighthouse Job: Deliver the diamonds to the Coral Hotel (150 s)';
   }
   // Refresh the HUD once for the staged state.
   hud.update(

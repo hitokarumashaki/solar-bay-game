@@ -35,7 +35,12 @@ function pedModel(color) {
 export function createTraffic(scene, city, rng) {
   const cars = [];
   for (let i = 0; i < TRAFFIC_COUNT; i += 1) {
-    const car = createCar(scene, pick(rng, CAR_COLORS), false);
+    // The first two traffic cars are yellow taxis (roof sign, see vehicles.js).
+    // The colour pick is consumed either way, so the random stream — and the
+    // rest of the city layout for a given seed — is unchanged from v3.
+    const color = pick(rng, CAR_COLORS);
+    const taxi = i < 2;
+    const car = createCar(scene, taxi ? 0xf2c200 : color, false, taxi);
     const road = pick(rng, ROAD_AT);
     const alongX = rng() < 0.5;
     const coord = range(rng, -160, 160);

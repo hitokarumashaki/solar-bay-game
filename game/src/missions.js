@@ -1,5 +1,5 @@
 // Missions + story. You are Rico Vega, a driver in Solar Bay; Marina Sol, a fixer,
-// calls the jobs. Six missions, each a chain of steps (go to a marker, pick up, deliver,
+// calls the jobs. Seven missions, each a chain of steps (go to a marker, pick up, deliver,
 // lose the cops, grab and escape). A glowing beam + floating diamond + ground ring marks
 // the target; completing a mission pays out and advances the story.
 import * as THREE from 'three';
@@ -81,6 +81,20 @@ const MISSIONS = [
     ],
     reward: 900,
     done: 'The ledger is ours. You are not just the Bay\'s best driver, Rico — you are its legend.',
+  },
+  {
+    id: 'lighthouse',
+    title: 'The Lighthouse Job',
+    giver: 'Marina Sol',
+    briefing: 'Last one, Rico — the biggest score in the Bay. Diamonds stashed at the lighthouse, south beach. Grab them, shake the heat, and get them to the Coral Hotel before the buyer walks — two and a half minutes.',
+    steps: [
+      { type: 'goto', text: 'Drive to the boardwalk, south beach', x: 0, z: 168 },
+      { type: 'pickup', text: 'Pick up the diamonds at the lighthouse', x: 0, z: 190 },
+      { type: 'escape', text: 'Lose the cops, then reach the safehouse', x: 160, z: 0, heat: 3 },
+      { type: 'deliver', text: 'Deliver the diamonds to the Coral Hotel (150 s)', x: 160, z: -120, time: 150 },
+    ],
+    reward: 1000,
+    done: 'Four thousand four hundred. The lighthouse diamonds are ours — and so is Solar Bay, Rico. Legend.',
   },
 ];
 
@@ -215,6 +229,12 @@ export function updateMissions(missions, dt, px, pz, inCar, stoleCar, wanted, on
     missions.step += 1;
     const next = m.steps[missions.step];
     if (next.heat) addWanted(wanted, next.heat);
+    // A timed deliver after a grab must start its clock here too — the
+    // goto/pickup/deliver branch below is not the only way to reach one.
+    if (next.type === 'deliver' && next.time) {
+      missions.timer = 0;
+      missions.timerMax = next.time;
+    }
     placeMarker(missions);
     return 'step';
   }
@@ -223,6 +243,14 @@ export function updateMissions(missions, dt, px, pz, inCar, stoleCar, wanted, on
     if (wanted.level === 0) {
       missions.step += 1;
       if (missions.step >= m.steps.length) return completeMission(missions, wanted, onMessage);
+      const next = m.steps[missions.step];
+      // Same timer fix as the grab branch: a timed deliver after an escape
+      // (Midnight Run's 120 s, the Lighthouse Job's 150 s) must start now,
+      // or the player would have unlimited time for the delivery.
+      if (next.type === 'deliver' && next.time) {
+        missions.timer = 0;
+        missions.timerMax = next.time;
+      }
       placeMarker(missions);
       return 'step';
     }
