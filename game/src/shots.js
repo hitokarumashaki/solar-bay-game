@@ -107,13 +107,13 @@ export function stageShot(name, game) {
     game.health = 82;
     game.objective = 'Hot Getaway: Lose the cops, then reach the safehouse';
   } else {
-    // The Lighthouse Job deliver at sunset: driving the getaway car east along the
-    // z=-120 road straight toward the Coral Hotel marker (160, -120), so the beam
-    // and its ground ring are dead ahead and unobstructed; the 150 s timer shows
-    // on the HUD and wanted stars are up from the lighthouse grab (heat 3).
+    // The Bayfront Heist deliver at sunset: driving the getaway car east along the
+    // z=0 road straight toward the safehouse marker (160, 0), so the beam and its
+    // ground ring are dead ahead and unobstructed; the 180 s timer shows on the HUD
+    // and wanted stars are up from the bank grab (heat 3).
     city.setTimeOfDay(0.95);
-    placeCar(car, 100, -120, Math.PI / 2);
-    placePlayer(player, 100, -120, Math.PI / 2);
+    placeCar(car, 100, 0, Math.PI / 2);
+    placePlayer(player, 100, 0, Math.PI / 2);
     game.inCar = true;
     game.playerCar = car;
     player.group.visible = false;
@@ -121,19 +121,19 @@ export function stageShot(name, game) {
     game.cameraPitch = 0.3;
     game.camDist = 11;
     wanted.level = 3;
-    missions.index = 6;
+    missions.index = 7;
     missions.step = 3;
-    missions.timer = 75;
-    missions.timerMax = 150;
-    missions.beam.position.set(160, 20, -120);
-    missions.diamond.position.set(160, 6, -120);
-    missions.ring.position.set(160, 0.08, -120);
+    missions.timer = 90;
+    missions.timerMax = 180;
+    missions.beam.position.set(160, 20, 0);
+    missions.diamond.position.set(160, 6, 0);
+    missions.ring.position.set(160, 0.08, 0);
     missions.beam.visible = true;
     missions.diamond.visible = true;
     missions.ring.visible = true;
-    game.money = 3400;
+    game.money = 4400;
     game.health = 100;
-    game.objective = 'The Lighthouse Job: Deliver the diamonds to the Coral Hotel (150 s)';
+    game.objective = 'Bayfront Heist: Deliver the gold to the safehouse (180 s)';
   }
   // Refresh the HUD once for the staged state.
   hud.update(
@@ -141,6 +141,7 @@ export function stageShot(name, game) {
       health: game.health, money: game.money, wanted: wanted.level,
       objective: game.objective, timer: missions.timer, timerMax: missions.timerMax,
       speedKmh: game.inCar ? 62 : 0, inCar: game.inCar, onFoot: !game.inCar,
+      missionIndex: missions.index, missionTotal: missions.list.length,
     },
     0,
   );

@@ -14,7 +14,7 @@ export function createCombat(scene) {
   scene.add(flash);
   return {
     scene, tracer, flash,
-    ammo: 12, magSize: 12,
+    ammo: 15, magSize: 15,
     cooldown: 0, flashTimer: 0, tracerTimer: 0,
   };
 }
@@ -48,7 +48,7 @@ export function shoot(combat, origin, dir, targets, audio, onCrime) {
   combat.tracer.lookAt(end);
   combat.tracer.scale.set(1, 1, origin.distanceTo(end));
   combat.tracer.visible = true;
-  combat.tracerTimer = 0.09;
+  combat.tracerTimer = 0.12;
   if (best) {
     best.health -= 34;
     if (best.onHit) best.onHit(best);

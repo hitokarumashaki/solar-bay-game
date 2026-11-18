@@ -83,7 +83,7 @@ export function stepPlayer(player, move, jump, cameraYaw, dt, collideCircle) {
     player.heading += diff * Math.min(1, dt * 14);
   }
   if (jump && player.grounded) {
-    player.vy = 7.5;
+    player.vy = 8;
     player.grounded = false;
   }
   if (!player.grounded) {
@@ -102,6 +102,9 @@ export function stepPlayer(player, move, jump, cameraYaw, dt, collideCircle) {
   player.legR.rotation.x = -swing;
   player.armL.rotation.x = -swing * 0.8;
   player.armR.rotation.x = swing * 0.8;
+  // Lean into a run, so sprinting reads as effort rather than a faster walk.
+  const lean = player.moving && move.run ? 0.12 : 0;
+  player.group.rotation.x = lean;
   player.group.position.set(player.x, player.y, player.z);
   player.group.rotation.y = player.heading;
   return player.moving;

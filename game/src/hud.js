@@ -75,6 +75,10 @@ export function createHud(doc) {
     for (let i = 0; i < 5; i += 1) starHtml += `<span class="${i < state.wanted ? 'on' : ''}">★</span>`;
     stars.innerHTML = starHtml;
     objective.textContent = state.objective;
+    // Mission progress: "Job 3/8" ahead of the objective, while a job is active.
+    if (state.missionTotal && state.missionIndex < state.missionTotal) {
+      objective.textContent = `Job ${state.missionIndex + 1}/${state.missionTotal} — ${state.objective}`;
+    }
     objectiveTimer.textContent = state.timerMax > 0 ? `${Math.max(0, Math.ceil(state.timerMax - state.timer))}s` : '';
     speed.textContent = state.inCar ? `${Math.round(Math.abs(state.speedKmh))} km/h` : '';
     speed.style.display = state.inCar ? 'block' : 'none';

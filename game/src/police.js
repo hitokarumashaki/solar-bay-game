@@ -142,13 +142,14 @@ export function updatePolice(police, wanted, dt, collideCircle, player, playerCa
   }
   // Spawn police cars up to the wanted level. They are a touch slower than the
   // player's car, so a clean straight-line getaway can build distance — but they
-  // keep coming, and they cut corners on the grid.
+  // keep coming, and they cut corners on the grid. At 4+ stars they push harder
+  // (top speed 31) so a high-heat chase stays threatening.
   const wantCars = wanted.level;
   police.spawnTimer -= dt;
   if (police.cars.length < wantCars && police.spawnTimer <= 0) {
     police.spawnTimer = 1.2;
     const car = createCar(scene, 0x1a1c20, true);
-    car.topSpeed = 29;
+    car.topSpeed = wanted.level >= 4 ? 31 : 29;
     const angle = range(police.rng, 0, Math.PI * 2);
     const sx = px + Math.sin(angle) * 70;
     const sz = pz + Math.cos(angle) * 70;

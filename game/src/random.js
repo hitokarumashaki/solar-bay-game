@@ -22,7 +22,18 @@ export function rangeInt(random, min, max) {
   return Math.floor(range(random, min, max + 1));
 }
 
-// Fisher-Yates shuffle, in place, using the seeded random.
+// Pick one value from [value, weight] pairs, weighted by the weights.
+// Uses exactly one random() call, like pick(), so the seeded stream stays aligned.
+export function weighted(random, pairs) {
+  let total = 0;
+  for (const [, w] of pairs) total += w;
+  let roll = random() * total;
+  for (const [value, w] of pairs) {
+    roll -= w;
+    if (roll <= 0) return value;
+  }
+  return pairs[pairs.length - 1][0];
+}
 export function shuffle(random, array) {
   for (let i = array.length - 1; i > 0; i -= 1) {
     const j = Math.floor(random() * (i + 1));

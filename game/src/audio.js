@@ -153,5 +153,19 @@ export function createAudio() {
     blip(70, 0.18, 'sine', 0.35);
   }
 
-  return { ensure, update, gunshot, chime, click, thud, hit };
+  // A low descending tone for a failed timed mission.
+  function fail() {
+    if (!ctx) return;
+    blip(220, 0.22, 'sawtooth', 0.16);
+    setTimeout(() => blip(147, 0.3, 'sawtooth', 0.16), 160);
+  }
+
+  // Mute toggle: silences the master gain (engine, siren, effects all at once).
+  let muted = false;
+  function setMuted(m) {
+    muted = !!m;
+    if (master) master.gain.value = muted ? 0 : 0.5;
+  }
+
+  return { ensure, update, gunshot, chime, click, thud, hit, fail, setMuted };
 }

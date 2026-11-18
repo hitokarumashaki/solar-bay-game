@@ -1,5 +1,5 @@
 // Missions + story. You are Rico Vega, a driver in Solar Bay; Marina Sol, a fixer,
-// calls the jobs. Seven missions, each a chain of steps (go to a marker, pick up, deliver,
+// calls the jobs. Eight missions, each a chain of steps (go to a marker, pick up, deliver,
 // lose the cops, grab and escape). A glowing beam + floating diamond + ground ring marks
 // the target; completing a mission pays out and advances the story.
 import * as THREE from 'three';
@@ -95,6 +95,20 @@ const MISSIONS = [
     ],
     reward: 1000,
     done: 'Four thousand four hundred. The lighthouse diamonds are ours — and so is Solar Bay, Rico. Legend.',
+  },
+  {
+    id: 'bayfront',
+    title: 'Bayfront Heist',
+    giver: 'Marina Sol',
+    briefing: 'The bank restocked its vault after the Bay Job — and the gold is still sitting there. One last score, Rico. Grab it on foot, shake the heat to the east docks, then get it to the safehouse before the buyer walks — three minutes.',
+    steps: [
+      { type: 'goto', text: 'Drive to the Bay Bank, north plaza', x: 0, z: -160 },
+      { type: 'grab', text: 'Grab the gold on foot — watch the guards', x: 0, z: -140 },
+      { type: 'escape', text: 'Lose the cops, then reach the east docks', x: 160, z: 160, heat: 3 },
+      { type: 'deliver', text: 'Deliver the gold to the safehouse (180 s)', x: 160, z: 0, time: 180 },
+    ],
+    reward: 1200,
+    done: 'Five thousand six hundred. The Bayfront gold is ours — Rico Vega, the legend of Solar Bay.',
   },
 ];
 

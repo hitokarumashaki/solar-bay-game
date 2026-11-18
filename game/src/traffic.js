@@ -46,7 +46,8 @@ export function createTraffic(scene, city, rng) {
     const coord = range(rng, -160, 160);
     if (alongX) placeCar(car, coord, road, rng() < 0.5 ? Math.PI / 2 : -Math.PI / 2);
     else placeCar(car, road, coord, rng() < 0.5 ? 0 : Math.PI);
-    car.cruise = range(rng, 8, 12);
+    // Taxis are working cabs: a slightly higher cruise speed than regular traffic.
+    car.cruise = taxi ? range(rng, 11, 14) : range(rng, 8, 12);
     car.stopped = 0;
     cars.push(car);
   }
@@ -202,7 +203,9 @@ export function updateTraffic(traffic, dt, collideCircle, playerCar, playerPos, 
     let heading = ped.heading;
     if (ped.flee > 0) {
       ped.flee -= dt;
-      speed = 4.2;
+      // Fleeing pedestrians run a touch faster, so they clear the road before
+      // the car that scared them reaches them.
+      speed = 4.6;
       heading = Math.atan2(ped.x - (threat ? threat.x : ped.x), ped.z - (threat ? threat.z : ped.z));
     } else {
       // Walk the block perimeter: edge 0/2 are z sides, 1/3 are x sides.

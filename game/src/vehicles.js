@@ -56,6 +56,7 @@ export function createCarModel(color, police, taxi) {
     g.add(lamp);
   }
   let lightBar = null;
+  let taxiSign = null;
   if (taxi) {
     const sign = new THREE.Mesh(
       new THREE.BoxGeometry(0.7, 0.22, 0.3),
@@ -63,6 +64,7 @@ export function createCarModel(color, police, taxi) {
     );
     sign.position.set(0, 1.58, -0.25);
     g.add(sign);
+    taxiSign = sign;
   }
   if (police) {
     lightBar = new THREE.Group();
@@ -83,16 +85,16 @@ export function createCarModel(color, police, taxi) {
     lightBar.userData.blue = blue;
     g.add(lightBar);
   }
-  return { group: g, wheels, lightBar };
+  return { group: g, wheels, lightBar, taxiSign };
 }
 
 // A drivable car: position, heading, velocity vector, steering. `driver` is 'player',
 // 'traffic' or 'police'; traffic/police cars are driven by their AI instead of input.
 export function createCar(scene, color, police, taxi) {
-  const { group, wheels, lightBar } = createCarModel(color, police, taxi);
+  const { group, wheels, lightBar, taxiSign } = createCarModel(color, police, taxi);
   scene.add(group);
   const car = {
-    group, wheels, lightBar, police: !!police, taxi: !!taxi,
+    group, wheels, lightBar, taxiSign, police: !!police, taxi: !!taxi,
     x: 0, z: 0, heading: 0,
     vx: 0, vz: 0,
     steer: 0,
@@ -129,6 +131,10 @@ export function syncCar(car) {
     const on = Math.sin(car.sirenPhase) > 0;
     car.lightBar.userData.red.material.emissiveIntensity = on ? 2.2 : 0.25;
     car.lightBar.userData.blue.material.emissiveIntensity = on ? 0.25 : 2.2;
+  }
+  // The taxi roof sign pulses gently, so cabs read as working taxis at a glance.
+  if (car.taxiSign) {
+    car.taxiSign.material.emissiveIntensity = 0.4 + 0.25 * Math.sin(performance.now() / 400);
   }
 }
 

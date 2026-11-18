@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { createRandom } from './random.js';
 import {
   createInput,
-  ACTION_CONFIRM, ACTION_PAUSE, ACTION_ENTER_CAR, ACTION_SHOOT, ACTION_RELOAD, ACTION_HANDBRAKE, ACTION_ZOOM,
+  ACTION_CONFIRM, ACTION_PAUSE, ACTION_ENTER_CAR, ACTION_SHOOT, ACTION_RELOAD, ACTION_HANDBRAKE, ACTION_ZOOM, ACTION_MUTE,
 } from './input.js';
 import { createAudio } from './audio.js';
 import { buildCity } from './city.js';
@@ -104,7 +104,11 @@ function loadSave(data) {
 }
 
 function spawnGuards() {
-  if (guards.length > 0) return;
+  // Fresh guards whenever the old set is all dead — the Bay Job and the Bayfront
+  // Heist both grab at the bank, and the second grab needs its own guards.
+  if (guards.length > 0 && guards.some((g) => !g.dead)) return;
+  for (const g of guards) scene.remove(g.group);
+  guards.length = 0;
   // On the road by the bank vault, flanking the cash marker — not inside a building.
   for (const [x, z] of [[-4, -136], [4, -144]]) {
     guards.push(createGuard(scene, x, z));
@@ -250,6 +254,13 @@ function stepWorld(dt, actions) {
   game.cameraYaw -= mouse.x * 0.004;
   game.cameraPitch = Math.max(0.12, Math.min(0.9, game.cameraPitch + mouse.y * 0.003));
 
+  // M toggles sound on/off.
+  if (actions & ACTION_MUTE) {
+    game.muted = !game.muted;
+    audio.setMuted(game.muted);
+    hud.showMessage(game.muted ? 'Sound off' : 'Sound on', 1.5);
+  }
+
   // C toggles a farther chase camera (see more of the street).
   if (actions & ACTION_ZOOM) game.camFar = !game.camFar;
 
@@ -355,6 +366,10 @@ function stepWorld(dt, actions) {
     hud.showMessage(ev === 'all-done' ? 'ALL JOBS DONE — Solar Bay is yours!' : `Mission complete! +$${missionReward(missions)}`, 3.5);
     saveGame();
   }
+  if (ev === 'failed') {
+    audio.fail();
+    hud.showMessage('Too slow — the job fell through.', 3);
+  }
   // Health regen (slow) and audio.
   if (game.health > 0 && game.health < 100) game.health = Math.min(100, game.health + dt * 1.5);
   const speed = game.inCar && game.playerCar ? game.playerCar.speed : 0;
@@ -368,6 +383,7 @@ function stepWorld(dt, actions) {
       health: game.health, money: game.money, wanted: wanted.level,
       objective: game.objective, timer: missions.timer, timerMax: missions.timerMax,
       speedKmh: Math.abs(speed) * 3.6, inCar: game.inCar, onFoot: !game.inCar,
+      missionIndex: missions.index, missionTotal: missions.list.length,
     },
     dt,
   );

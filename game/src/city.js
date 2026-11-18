@@ -3,15 +3,13 @@
 // streetlights, one sun with shadows and a time-of-day sky. Exports the collision boxes
 // (buildings) and the road network (traffic + minimap), plus setTimeOfDay.
 import * as THREE from 'three';
-import { pick, range, rangeInt } from './random.js';
+import { pick, range, rangeInt, weighted } from './random.js';
 
 export const CITY_HALF = 200;
 export const ROAD_AT = [-160, -120, -80, -40, 0, 40, 80, 120, 160];
 export const ROAD_HALF = 5;
 export const BLOCK_CENTERS = [-140, -100, -60, -20, 20, 60, 100, 140];
 export const BOUND = { minX: -188, maxX: 188, minZ: -188, maxZ: 204 };
-
-const BUILDING_COLORS = [0xf2e3c6, 0xe8b4a0, 0x9fc8c0, 0xf7f0e0, 0xd9a441, 0x7fb3d5, 0xe07a5f, 0xffffff];
 
 const WALL_COLORS = ['#cbb89a', '#b8a88e', '#d8cbb0', '#a89a80', '#c4b49a'];
 
@@ -211,7 +209,8 @@ export function buildCity(scene, rng) {
       const w = range(rng, 14, 24);
       const d = range(rng, 14, 24);
       const h = range(rng, 9, 42);
-      const color = pick(rng, BUILDING_COLORS);
+      // Warm tones dominate the palette, so the city reads sun-soaked at golden hour.
+      const color = weighted(rng, [[0xf2e3c6, 3], [0xe8b4a0, 2], [0x9fc8c0, 1], [0xf7f0e0, 3], [0xd9a441, 2], [0x7fb3d5, 1], [0xe07a5f, 2], [0xffffff, 1]]);
       const winMat = winMats[rangeInt(rng, 0, winMats.length - 1)];
       const mats = [winMat, winMat, roofMat, roofMat, winMat, winMat];
       const mesh = new THREE.Mesh(boxGeo, mats);
@@ -319,6 +318,23 @@ export function buildCity(scene, rng) {
     top.castShadow = true;
     scene.add(top);
   }
+
+  // Wooden pier off the boardwalk into the ocean — a landmark on the south edge.
+  // Purely visual (it sits past the playable bounds), so it needs no collider.
+  const pierMat = new THREE.MeshLambertMaterial({ color: 0x8a6a42 });
+  const pierDeck = new THREE.Mesh(new THREE.BoxGeometry(7, 0.5, 34), pierMat);
+  pierDeck.position.set(60, 0.6, 190);
+  pierDeck.castShadow = true;
+  pierDeck.receiveShadow = true;
+  scene.add(pierDeck);
+  for (const [px, pz] of [[57, 178], [63, 178], [57, 204], [63, 204]]) {
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 2.4, 6), pierMat);
+    post.position.set(px, 0.4, pz);
+    scene.add(post);
+  }
+  const pierLamp = new THREE.Mesh(new THREE.SphereGeometry(0.4, 8, 6), lampMat);
+  pierLamp.position.set(60, 2.2, 205);
+  scene.add(pierLamp);
 
   // Push a circle (x, z, radius) out of every building box; clamp to the playable bounds.
   // Returns { x, z, hit }.
