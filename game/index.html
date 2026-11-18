@@ -36,6 +36,10 @@
   #crosshair::before, #crosshair::after { content: ""; position: absolute; background: #fff; box-shadow: 0 0 3px #000; }
   #crosshair::before { left: 10px; top: 0; width: 2px; height: 22px; }
   #crosshair::after { left: 0; top: 10px; width: 22px; height: 2px; }
+  #hitmark { position: absolute; left: 50%; top: 50%; width: 26px; height: 26px; margin: -13px 0 0 -13px; display: block; opacity: 0; pointer-events: none; }
+  #hitmark::before, #hitmark::after { content: ""; position: absolute; left: 11px; top: 0; width: 4px; height: 26px; background: #ffd23c; box-shadow: 0 0 4px #000; }
+  #hitmark::before { transform: rotate(45deg); }
+  #hitmark::after { transform: rotate(-45deg); }
   #hint { position: absolute; bottom: 16px; right: 16px; text-align: right; font-size: 12px; color: rgba(255,255,255,.75); line-height: 1.5; }
   .screen { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; flex-direction: column; background: linear-gradient(180deg, rgba(20,16,8,.82), rgba(60,30,10,.88)); z-index: 10; color: #fff; text-align: center; pointer-events: auto; }
   .screen h1 { font-size: 64px; margin: 0; letter-spacing: 6px; color: #ffd23c; text-shadow: 0 4px 0 #b3541e, 0 8px 24px rgba(0,0,0,.6); }
@@ -67,14 +71,15 @@
     <div id="minimap-label">SOLAR BAY</div>
   </div>
   <div id="crosshair"></div>
-  <div id="hint">WASD move / drive &nbsp;·&nbsp; Shift run &nbsp;·&nbsp; E enter car &nbsp;·&nbsp; Space handbrake / jump<br>Click / F shoot &nbsp;·&nbsp; R reload &nbsp;·&nbsp; Esc pause &nbsp;·&nbsp; drag mouse to look</div>
+  <div id="hitmark"></div>
+  <div id="hint">WASD move / drive &nbsp;·&nbsp; Shift run &nbsp;·&nbsp; E enter car &nbsp;·&nbsp; Space handbrake / jump<br>Click / F shoot &nbsp;·&nbsp; R reload &nbsp;·&nbsp; C camera &nbsp;·&nbsp; Esc pause &nbsp;·&nbsp; drag mouse to look</div>
 </div>
 <div class="screen" id="start-screen">
   <h1>SOLAR BAY</h1>
   <h2>An open-world crime game — sun, streets and second chances.</h2>
   <p>You are <b>Rico Vega</b>, a driver with nothing but a fast car and a faster reputation. <b>Marina Sol</b>, the fixer who runs this town, has jobs for you — if you can stay ahead of the Solar Bay PD.</p>
   <p>Explore the city on foot or by car. Steal cars, run missions, earn cash — and watch the wanted stars. Lose the cops, or pay the price.</p>
-  <div class="controls">WASD — move / drive &nbsp;·&nbsp; Shift — run &nbsp;·&nbsp; E — enter / exit car &nbsp;·&nbsp; Space — handbrake / jump<br>Mouse drag — look around &nbsp;·&nbsp; Click / F — shoot &nbsp;·&nbsp; R — reload &nbsp;·&nbsp; Esc — pause</div>
+  <div class="controls">WASD — move / drive &nbsp;·&nbsp; Shift — run &nbsp;·&nbsp; E — enter / exit car &nbsp;·&nbsp; Space — handbrake / jump<br>Mouse drag — look around &nbsp;·&nbsp; Click / F — shoot &nbsp;·&nbsp; R — reload &nbsp;·&nbsp; C — camera zoom &nbsp;·&nbsp; Esc — pause</div>
   <div>
     <button id="start-button">START ENGINE</button>
     <button id="continue-button" class="alt" style="display:none">CONTINUE</button>
