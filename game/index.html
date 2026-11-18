@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solar Bay — Open World Crime Game</title>
+<link rel="icon" href="data:,">
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three/three.module.min.js"
+  }
+}
+</script>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #1a1611; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  #status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  #hud { position: fixed; inset: 0; pointer-events: none; z-index: 5; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.8); }
+  #top-left { position: absolute; top: 14px; left: 14px; }
+  #health-bar { width: 220px; height: 16px; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.5); border-radius: 3px; overflow: hidden; }
+  #health-fill { height: 100%; width: 100%; background: #3ecf6a; }
+  #money { margin-top: 6px; font-size: 22px; font-weight: 700; color: #7dff9a; }
+  #top-right { position: absolute; top: 14px; right: 16px; text-align: right; }
+  #stars { font-size: 26px; letter-spacing: 2px; color: rgba(255,255,255,.25); }
+  #stars span.on { color: #ffd23c; }
+  #objective { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); max-width: 46%; text-align: center; font-size: 17px; font-weight: 600; background: rgba(0,0,0,.45); padding: 6px 14px; border-radius: 4px; }
+  #objective-timer { color: #ffd23c; font-weight: 800; }
+  #message { position: absolute; top: 34%; left: 50%; transform: translate(-50%, -50%); font-size: 34px; font-weight: 800; color: #ffd23c; opacity: 0; transition: opacity .3s; text-align: center; }
+  #dialogue { position: absolute; bottom: 118px; left: 50%; transform: translateX(-50%); max-width: 640px; text-align: center; font-size: 17px; font-style: italic; background: rgba(0,0,0,.55); padding: 8px 16px; border-radius: 4px; opacity: 0; transition: opacity .3s; }
+  #speed { position: absolute; bottom: 66px; right: 22px; font-size: 30px; font-weight: 800; }
+  #minimap-wrap { position: absolute; bottom: 16px; left: 16px; }
+  #minimap { width: 180px; height: 180px; border: 2px solid rgba(255,255,255,.65); border-radius: 50%; background: #20242c; display: block; }
+  #minimap-label { text-align: center; font-size: 12px; letter-spacing: 3px; margin-top: 4px; color: rgba(255,255,255,.85); }
+  #crosshair { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; display: none; }
+  #crosshair::before, #crosshair::after { content: ""; position: absolute; background: #fff; box-shadow: 0 0 3px #000; }
+  #crosshair::before { left: 10px; top: 0; width: 2px; height: 22px; }
+  #crosshair::after { left: 0; top: 10px; width: 22px; height: 2px; }
+  #hint { position: absolute; bottom: 16px; right: 16px; text-align: right; font-size: 12px; color: rgba(255,255,255,.75); line-height: 1.5; }
+  .screen { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; flex-direction: column; background: linear-gradient(180deg, rgba(20,16,8,.82), rgba(60,30,10,.88)); z-index: 10; color: #fff; text-align: center; pointer-events: auto; }
+  .screen h1 { font-size: 64px; margin: 0; letter-spacing: 6px; color: #ffd23c; text-shadow: 0 4px 0 #b3541e, 0 8px 24px rgba(0,0,0,.6); }
+  .screen h2 { font-size: 20px; font-weight: 400; color: #ffe9b0; margin: 8px 0 18px; }
+  .screen p { max-width: 620px; font-size: 16px; line-height: 1.6; color: #f2e8d5; margin: 6px 0; }
+  .screen .controls { font-size: 14px; color: #cfe3ff; background: rgba(0,0,0,.35); padding: 10px 18px; border-radius: 6px; margin: 14px 0; line-height: 1.8; }
+  .screen button { pointer-events: auto; font-size: 20px; font-weight: 700; padding: 12px 34px; margin: 6px; border: none; border-radius: 6px; background: #ffd23c; color: #231303; cursor: pointer; }
+  .screen button:hover { background: #ffe27a; }
+  .screen button.alt { background: #2ec4b6; color: #06231f; }
+  #end-title { font-size: 72px; color: #ff5a3c; }
+</style>
+</head>
+<body>
+<canvas id="game" aria-label="Solar Bay: an open-world crime game. Drive, steal cars, run missions and lose the cops."></canvas>
+<p id="status" role="status" aria-live="polite"></p>
+<div id="hud">
+  <div id="top-left">
+    <div id="health-bar"><div id="health-fill"></div></div>
+    <div id="money">$0</div>
+  </div>
+  <div id="top-right"><div id="stars"></div></div>
+  <div id="objective"></div>
+  <div id="objective-timer"></div>
+  <div id="message"></div>
+  <div id="dialogue"></div>
+  <div id="speed"></div>
+  <div id="minimap-wrap">
+    <canvas id="minimap" width="180" height="180"></canvas>
+    <div id="minimap-label">SOLAR BAY</div>
+  </div>
+  <div id="crosshair"></div>
+  <div id="hint">WASD move / drive &nbsp;·&nbsp; Shift run &nbsp;·&nbsp; E enter car &nbsp;·&nbsp; Space handbrake / jump<br>Click / F shoot &nbsp;·&nbsp; R reload &nbsp;·&nbsp; Esc pause &nbsp;·&nbsp; drag mouse to look</div>
+</div>
+<div class="screen" id="start-screen">
+  <h1>SOLAR BAY</h1>
+  <h2>An open-world crime game — sun, streets and second chances.</h2>
+  <p>You are <b>Rico Vega</b>, a driver with nothing but a fast car and a faster reputation. <b>Marina Sol</b>, the fixer who runs this town, has jobs for you — if you can stay ahead of the Solar Bay PD.</p>
+  <p>Explore the city on foot or by car. Steal cars, run missions, earn cash — and watch the wanted stars. Lose the cops, or pay the price.</p>
+  <div class="controls">WASD — move / drive &nbsp;·&nbsp; Shift — run &nbsp;·&nbsp; E — enter / exit car &nbsp;·&nbsp; Space — handbrake / jump<br>Mouse drag — look around &nbsp;·&nbsp; Click / F — shoot &nbsp;·&nbsp; R — reload &nbsp;·&nbsp; Esc — pause</div>
+  <div>
+    <button id="start-button">START ENGINE</button>
+    <button id="continue-button" class="alt" style="display:none">CONTINUE</button>
+  </div>
+  <p style="font-size:13px;color:#cbb98f">Progress saves in this browser (localStorage). All original — no Rockstar / GTA content.</p>
+</div>
+<div class="screen" id="pause-screen">
+  <h1 style="font-size:44px">PAUSED</h1>
+  <p>Take a breath, Rico. The Bay waits.</p>
+  <div>
+    <button id="resume-button">RESUME</button>
+    <button id="restart-button" class="alt">NEW GAME</button>
+  </div>
+</div>
+<div class="screen" id="end-screen">
+  <h1 id="end-title">WASTED</h1>
+  <p id="end-text"></p>
+  <div><button id="respawn-button">BACK TO THE STREETS</button></div>
+</div>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
